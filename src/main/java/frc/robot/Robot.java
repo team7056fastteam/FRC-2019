@@ -3,6 +3,7 @@ package frc.robot;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.SpeedControllerGroup;
@@ -46,6 +47,10 @@ public class Robot extends TimedRobot {
         _pneumatics = new Pneumatics();
 
         _intake.robotInit();
+    }
+
+    public double returnSensorOutput() {
+        return Math.random();
     }
 
     public void drive() {
