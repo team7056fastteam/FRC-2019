@@ -3,7 +3,6 @@ package frc.robot;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.SpeedControllerGroup;
@@ -177,7 +176,7 @@ public class Robot extends TimedRobot {
 
         _intake.autonomousInit();
     }
-
+    /*
     public void autonomousPeriodic() {
         
         // If it has been less than 2 seconds since autonomous started, drive forwards
@@ -198,6 +197,21 @@ public class Robot extends TimedRobot {
                 }
                 drive.arcadeDrive(0, 0);
             }
+        }
+    }
+    */
+
+    public void autonomousPeriodic() {
+        
+        // If it has been less than 2 seconds since autonomous started, drive forwards
+        if (t.get() < 2.0) {
+            drive.arcadeDrive(0.5, 0.0);
+        }
+
+        // If it has been more than 2 seconds, stop the robot
+        else {
+            
+            drive.arcadeDrive(0, 0);
         }
     }
 
