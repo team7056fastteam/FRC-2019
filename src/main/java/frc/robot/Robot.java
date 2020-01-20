@@ -5,8 +5,14 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.Sendable;
 import edu.wpi.first.wpilibj.SpeedControllerGroup;
 import edu.wpi.first.wpilibj.Spark;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.interfaces.Gyro;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.AnalogGyro;
 
 import edu.wpi.first.networktables.NetworkTableInstance;
 
@@ -38,23 +44,34 @@ public class Robot extends TimedRobot {
     private double limelightDrive = 0;
     private double limelightSteer = 0;
 
+    Gyro gyro = new AnalogGyro(0);
+    double kP = 1;
+    private static final String auton1 = "Default Auton";
+    private static final String auton2 = "Auton 2";
+    private String autoSelected;
+    private final SendableChooser<String> chooser = new SendableChooser<>();
+
     Timer t = new Timer();
 
     public void robotInit() {
+
         _LEDSwitch = new DigitalInput(1);
         _intake = new Intake();
         _pneumatics = new Pneumatics();
-
         _intake.robotInit();
-    }
 
-    public double returnSensorOutput() {
-        return Math.random();
+        chooser.setDefaultOption("Default Auto", auton1);
+        chooser.addOption("Auton 2", auton2);
+        SmartDashboard.putData("Auton modes", chooser);
+
+        // Places a compass indicator for the gyro heading on the dashboard
+        // Explicit down-cast required because Gyro does not extend Sendable
+        Shuffleboard.getTab("Gyro Alignment").add((Sendable) gyro);
     }
 
     public void drive() {
         double defaultDriveSpeed;
-        boolean auto = operator.getRawButton(8);
+        boolean auto = driver.getRawButton(8);
 
         Update_Limelight_Tracking();
 
@@ -130,8 +147,8 @@ public class Robot extends TimedRobot {
     public void Update_Limelight_Tracking() {
         
         final double STEER_K = 0.03;                    // how hard to turn toward the target
-        final double DRIVE_K = 0.1;                    // how hard to drive fwd toward the target
-        final double DESIRED_TARGET_AREA = 13.0;        // Area of the target when the robot reaches the wall
+        final double DRIVE_K = 0.2;                    // how hard to drive fwd toward the target
+        final double DESIRED_TARGET_AREA = 5;        // Area of the target when the robot reaches the wall
         final double MAX_DRIVE = 0.4;                   // Simple speed limit so we don't drive too fast
 
         double tv = NetworkTableInstance.getDefault().getTable("limelight").getEntry("tv").getDouble(0);
@@ -143,15 +160,12 @@ public class Robot extends TimedRobot {
 
         if (tv < 1.0)
         {
-            NetworkTableInstance.getDefault().getTable("limelight").getEntry("ledMode").setNumber(1);
-
             limelightHasValidTarget = false;
             limelightDrive = 0.0;
             limelightSteer = 0.0;
             return;
         }
 
-        NetworkTableInstance.getDefault().getTable("limelight").getEntry("ledMode").setNumber(3);
         limelightHasValidTarget = true;
 
         // Start with proportional steering
@@ -171,48 +185,96 @@ public class Robot extends TimedRobot {
     }
 
     public void autonomousInit() {
+        autoSelected = chooser.getSelected();
+        // m_autoSelected = SmartDashboard.getString("Auto Selector", kDefaultAuto);
+        System.out.println("Auto selected: " + autoSelected);
+
         t.reset();
         t.start();
-
-        _intake.autonomousInit();
     }
+
     /*
     public void autonomousPeriodic() {
-        
-        // If it has been less than 2 seconds since autonomous started, drive forwards
-        if (t.get() < 2.0) {
-            drive.arcadeDrive(0.5, 0.0);
+        Update_Limelight_Tracking();
+
+        if (limelightHasValidTarget) {
+            double value = 0;
+
+            // 0 > 1
+            if (t.get() < 1.0) {
+                value = 0.4;
+            }
+    
+            // 1.5 > 2
+            else if (t.get() > 1.5 && t.get() < 2 ) {
+                _intake.auton();
+            }
+    
+            // End
+            else {
+                value = 0;
+                _intake.off();
+            }
+
+            drive.arcadeDrive(value, limelightSteer);
+        }
+        else {
+            drive.arcadeDrive(0, 0.3);
+            t.reset();
         }
 
-        // If it has been more than 2 seconds, stop the robot
-        else {
-            
-            if (limelightHasValidTarget)
-            {
-                drive.arcadeDrive(limelightDrive, limelightSteer);
-            }
-            else {
-                if (atDesiredTarget == 1) {
-                    _intake.auton();
-                }
-                drive.arcadeDrive(0, 0);
-            }
-        }
     }
     */
 
     public void autonomousPeriodic() {
-        
-        // If it has been less than 2 seconds since autonomous started, drive forwards
-        if (t.get() < 2.0) {
-            drive.arcadeDrive(0.5, 0.0);
-        }
+        Update_Limelight_Tracking();
 
-        // If it has been more than 2 seconds, stop the robot
-        else {
-            
-            drive.arcadeDrive(0, 0);
-        }
+        switch (autoSelected) {
+
+            case auton1:
+                if (limelightHasValidTarget) {
+                    double value = 0;
+
+                    // 0 > 2
+                    if (t.get() < 2.0) {
+                        value = 0.4;
+                    }
+    
+                    // 2.5 > 3
+                    else if (t.get() > 2.5 && t.get() < 3 ) {
+                        _intake.auton();
+                    }
+    
+                    // End
+                    else {
+                        value = 0;
+                        _intake.off();
+                    }
+
+                    drive.arcadeDrive(value, limelightSteer);
+                }
+                else {
+                    drive.arcadeDrive(0, 0.5);
+                    t.reset();
+                }
+              break;
+            case auton2:
+            default:
+                 double value = 0;
+
+                // 0 > 1
+                if (t.get() < 2.0) {
+                    value = 0.4;
+                }
+
+                // End
+                else {
+                    value = 0;
+                }
+
+                drive.arcadeDrive(value, 0);
+              break;
+          }
     }
 
 }

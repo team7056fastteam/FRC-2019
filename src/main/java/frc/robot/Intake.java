@@ -10,6 +10,8 @@ import edu.wpi.first.wpilibj.Timer;
 
 public class Intake {
 
+    double ivalue;
+
     Joystick operator = new Joystick(1);
 
     TalonSRX leftLift = new TalonSRX(4);
@@ -27,17 +29,12 @@ public class Intake {
         hatchLimit = new DigitalInput(0);
     }
 
-    public void autonomousInit() {
-        t.reset();
-        t.start();
-    }
-
     public void modules() {
         intake();
         lift();
         hatch();
     }
-
+    
     public void intake() {
         double value;
         double tilt = operator.getRawAxis(1) * -0.75;   // Left Y
@@ -58,24 +55,13 @@ public class Intake {
     }
 
     public void auton() {
-        double value;
+        intakeLeft.set(ControlMode.PercentOutput, 0.5);
+        intakeRight.set(ControlMode.PercentOutput, -0.5);
+    }
 
-        // If it has been more than 2 seconds since limelight tracking started, shoot the ball
-        if (t.get() > 2.0) {
-            value = 0.5;
-        }
-
-        // If it has been more than 3 seconds, stop
-        else if (t.get() > 3.0) {
-            value = 0;
-        }
-
-        else {
-            value = 0;
-        }
-
-        intakeLeft.set(ControlMode.PercentOutput, value);
-        intakeRight.set(ControlMode.PercentOutput, -value);
+    public void off() {
+        intakeLeft.set(ControlMode.PercentOutput, 0);
+        intakeRight.set(ControlMode.PercentOutput, 0);
     }
 
     public void lift() {
