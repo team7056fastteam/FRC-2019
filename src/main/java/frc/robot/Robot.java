@@ -5,16 +5,18 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.Sendable;
 import edu.wpi.first.wpilibj.SpeedControllerGroup;
 import edu.wpi.first.wpilibj.Spark;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.ADXRS450_Gyro;
+import edu.wpi.first.wpilibj.AnalogInput;
+import edu.wpi.first.networktables.NetworkTableInstance;
+
 import edu.wpi.first.wpilibj.interfaces.Gyro;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
-import edu.wpi.first.wpilibj.AnalogGyro;
-
-import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.Sendable;
+import edu.wpi.first.wpilibj.SPI;
 
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
@@ -43,15 +45,31 @@ public class Robot extends TimedRobot {
     private boolean limelightHasValidTarget = false;
     private double limelightDrive = 0;
     private double limelightSteer = 0;
-
-    Gyro gyro = new AnalogGyro(0);
-    double kP = 1;
+    
     private static final String auton1 = "Default Auton";
     private static final String auton2 = "Auton 2";
     private String autoSelected;
     private final SendableChooser<String> chooser = new SendableChooser<>();
 
     Timer t = new Timer();
+    Gyro gyro = new ADXRS450_Gyro(SPI.Port.kOnboardCS0);
+    double kP = 1;
+
+    private static final AnalogInput sensor = new AnalogInput(0);
+    private static final double VOLTS_TO_DIST = 1.0;
+
+    public static double getVoltage() {
+        return sensor.getVoltage();
+    }
+    
+    public static double getDistance() {
+        return getVoltage() * VOLTS_TO_DIST;
+    }
+      
+    public static void updateDashboard() {
+        SmartDashboard.putNumber("Distance (volts)", getVoltage());
+        SmartDashboard.putNumber("Distance (real)", getDistance());
+    }
 
     public void robotInit() {
 
@@ -64,9 +82,12 @@ public class Robot extends TimedRobot {
         chooser.addOption("Auton 2", auton2);
         SmartDashboard.putData("Auton modes", chooser);
 
-        // Places a compass indicator for the gyro heading on the dashboard
-        // Explicit down-cast required because Gyro does not extend Sendable
+        gyro.calibrate();
         Shuffleboard.getTab("Gyro Alignment").add((Sendable) gyro);
+    }
+
+    public void robotPeriodic() {
+        updateDashboard();
     }
 
     public void drive() {
@@ -192,39 +213,6 @@ public class Robot extends TimedRobot {
         t.reset();
         t.start();
     }
-
-    /*
-    public void autonomousPeriodic() {
-        Update_Limelight_Tracking();
-
-        if (limelightHasValidTarget) {
-            double value = 0;
-
-            // 0 > 1
-            if (t.get() < 1.0) {
-                value = 0.4;
-            }
-    
-            // 1.5 > 2
-            else if (t.get() > 1.5 && t.get() < 2 ) {
-                _intake.auton();
-            }
-    
-            // End
-            else {
-                value = 0;
-                _intake.off();
-            }
-
-            drive.arcadeDrive(value, limelightSteer);
-        }
-        else {
-            drive.arcadeDrive(0, 0.3);
-            t.reset();
-        }
-
-    }
-    */
 
     public void autonomousPeriodic() {
         Update_Limelight_Tracking();
