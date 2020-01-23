@@ -244,8 +244,8 @@ public class Robot extends TimedRobot {
                         drive.arcadeDrive(limelightDrive, limelightSteer);
                     }
 
-                    // Check if the robot is 2 feet away, if so then shoot the ball and drive back.
-                    if (getDistance() < 2) {
+                    // Check if the robot is 2 1/2 feet away, if so then shoot the ball and drive back.
+                    if (getDistance() < 2.5) {
                         already = 1;
                         _intake.auton();
                         drive.arcadeDrive(-0.3, 0);
