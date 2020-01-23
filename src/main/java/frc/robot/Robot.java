@@ -4,6 +4,7 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.DigitalInput;
+import java.text.DecimalFormat;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.SpeedControllerGroup;
 import edu.wpi.first.wpilibj.Spark;
@@ -51,12 +52,13 @@ public class Robot extends TimedRobot {
     private String autoSelected;
     private final SendableChooser<String> chooser = new SendableChooser<>();
 
-    Timer t = new Timer();
+    Timer at = new Timer();
+    Timer it = new Timer();
     Gyro gyro = new ADXRS450_Gyro(SPI.Port.kOnboardCS0);
     double kP = 1;
 
     private static final AnalogInput sensor = new AnalogInput(0);
-    private static final double VOLTS_TO_DIST = 1.0;
+    private static final double VOLTS_TO_DIST = 3.5;
 
     public static double getVoltage() {
         return sensor.getVoltage();
@@ -69,6 +71,11 @@ public class Robot extends TimedRobot {
     public static void updateDashboard() {
         SmartDashboard.putNumber("Distance (volts)", getVoltage());
         SmartDashboard.putNumber("Distance (real)", getDistance());
+
+        DecimalFormat value = new DecimalFormat("#.#");
+        double distance = getDistance();
+
+        System.out.println(value.format(distance));
     }
 
     public void robotInit() {
@@ -210,8 +217,9 @@ public class Robot extends TimedRobot {
         // m_autoSelected = SmartDashboard.getString("Auto Selector", kDefaultAuto);
         System.out.println("Auto selected: " + autoSelected);
 
-        t.reset();
-        t.start();
+        at.reset();
+        at.start();
+        it.reset();
     }
 
     public void autonomousPeriodic() {
@@ -219,39 +227,51 @@ public class Robot extends TimedRobot {
 
         switch (autoSelected) {
 
-            case auton1:
-                if (limelightHasValidTarget) {
-                    double value = 0;
+            // Autonomous 1:
+            // Robot will rotate until a limelight target is found, drive towards it
+            // and shoot the ball, then drive away from it and stop moving until
+            // auton is disabled. 
 
-                    // 0 > 2
-                    if (t.get() < 2.0) {
-                        value = 0.4;
+            case auton1:
+            default:
+
+                if (limelightHasValidTarget) {
+
+                    double already = 0;
+
+                    // Check if the robot has driven towards the target already, if not drive towards it.
+                    if (already == 0) {
+                        drive.arcadeDrive(limelightDrive, limelightSteer);
                     }
-    
-                    // 2.5 > 3
-                    else if (t.get() > 2.5 && t.get() < 3 ) {
+
+                    // Check if the robot is 2 feet away, if so then shoot the ball and drive back.
+                    if (getDistance() < 2) {
+                        already = 1;
                         _intake.auton();
-                    }
-    
-                    // End
-                    else {
-                        value = 0;
+                        drive.arcadeDrive(-0.3, 0);
+                    } else {
                         _intake.off();
                     }
 
-                    drive.arcadeDrive(value, limelightSteer);
                 }
+                // Rotate until a target is found, continuously resetting timer to not mess with further auton timing.
                 else {
                     drive.arcadeDrive(0, 0.5);
-                    t.reset();
+                    at.reset();
                 }
+
               break;
+
+            // Autonomous 2
+            // Robot will drive forward for 2 seconds then
+            // stop moving until auton is disabled.
+
             case auton2:
-            default:
+
                  double value = 0;
 
                 // 0 > 1
-                if (t.get() < 2.0) {
+                if (at.get() < 2.0) {
                     value = 0.4;
                 }
 
@@ -261,6 +281,7 @@ public class Robot extends TimedRobot {
                 }
 
                 drive.arcadeDrive(value, 0);
+
               break;
           }
     }
