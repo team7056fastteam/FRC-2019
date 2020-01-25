@@ -4,7 +4,6 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.DigitalInput;
-import java.text.DecimalFormat;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.SpeedControllerGroup;
 import edu.wpi.first.wpilibj.Spark;
@@ -13,11 +12,12 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.ADXRS450_Gyro;
 import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.networktables.NetworkTableInstance;
-
 import edu.wpi.first.wpilibj.interfaces.Gyro;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.Sendable;
 import edu.wpi.first.wpilibj.SPI;
+
+//import java.text.DecimalFormat;
 
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
@@ -72,10 +72,10 @@ public class Robot extends TimedRobot {
         SmartDashboard.putNumber("Distance (volts)", getVoltage());
         SmartDashboard.putNumber("Distance (real)", getDistance());
 
-        DecimalFormat value = new DecimalFormat("#.#");
-        double distance = getDistance();
+//        DecimalFormat value = new DecimalFormat("#.#");
+//        double distance = getDistance();
 
-        System.out.println(value.format(distance));
+//        System.out.println(value.format(distance));
     }
 
     public void robotInit() {
