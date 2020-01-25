@@ -234,32 +234,7 @@ public class Robot extends TimedRobot {
 
             case auton1:
             default:
-
-                if (limelightHasValidTarget) {
-
-                    double already = 0;
-
-                    // Check if the robot has driven towards the target already, if not drive towards it.
-                    if (already == 0) {
-                        drive.arcadeDrive(limelightDrive, limelightSteer);
-                    }
-
-                    // Check if the robot is 2 1/2 feet away, if so then shoot the ball and drive back.
-                    if (getDistance() < 2.5) {
-                        already = 1;
-                        _intake.auton();
-                        drive.arcadeDrive(-0.3, 0);
-                    } else {
-                        _intake.off();
-                    }
-
-                }
-                // Rotate until a target is found, continuously resetting timer to not mess with further auton timing.
-                else {
-                    drive.arcadeDrive(0, 0.5);
-                    at.reset();
-                }
-
+                autonA();
               break;
 
             // Autonomous 2
@@ -267,23 +242,52 @@ public class Robot extends TimedRobot {
             // stop moving until auton is disabled.
 
             case auton2:
-
-                 double value = 0;
-
-                // 0 > 1
-                if (at.get() < 2.0) {
-                    value = 0.4;
-                }
-
-                // End
-                else {
-                    value = 0;
-                }
-
-                drive.arcadeDrive(value, 0);
-
+                autonB();
               break;
           }
+    }
+
+    public void autonA() {
+        if (limelightHasValidTarget) {
+
+            double already = 0;
+
+            // Check if the robot has driven towards the target already, if not drive towards it.
+            if (already == 0) {
+                drive.arcadeDrive(limelightDrive, limelightSteer);
+            }
+
+            // Check if the robot is 2 1/2 feet away, if so then shoot the ball and drive back.
+            if (getDistance() < 2.5) {
+                already = 1;
+                _intake.auton();
+                drive.arcadeDrive(-0.3, 0);
+            } else {
+                _intake.off();
+            }
+
+        }
+        // Rotate until a target is found, continuously resetting timer to not mess with further auton timing.
+        else {
+            drive.arcadeDrive(0, 0.5);
+            at.reset();
+        }
+    }
+
+    public void autonB() {
+        double value = 0; 
+
+        // 0 > 1
+        if (at.get() < 2.0) {
+            value = 0.4;
+        }
+
+        // End
+        else {
+            value = 0;
+        }
+
+        drive.arcadeDrive(value, 0);
     }
 
 }
